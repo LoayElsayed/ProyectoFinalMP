@@ -25,8 +25,8 @@ void Fitxa::setTipus(const char& tipus)
 		break;
 	}
 	default:
-		m_colorFitxa = -1;
-		m_tipusFitxa = -1;
+		m_colorFitxa = COLOR_NUL;
+		m_tipusFitxa = TIPUS_EMPTY;
 	}
 
 }
