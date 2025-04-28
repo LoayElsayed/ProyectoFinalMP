@@ -1,35 +1,25 @@
 #include "header.h"
-#include "posicio.h"
-
-using namespace std;
-
-typedef enum
-{
-	TIPUS_NORMAL,
-	TIPUS_DAMA,
-	TIPUS_EMPTY
-} TipusFitxa;
-
-typedef enum
-{
-	COLOR_NEGRE,
-	COLOR_BLANC
-} ColorFitxa;
+#include "fitxa.h"
 
 class Posicio
 {
 public:
-	Posicio() : m_fila(-1), m_columna(-1) {};
-	Posicio(const string& posicio);
+	Posicio() :m_posicio("") {};
+	Posicio(const string& posicio) : m_posicio(posicio) {};
+
+	int getColumna(void) const { return int(m_posicio[0] - 'a'); }
+	int getFila(void) const { return int(m_posicio[1] - '1'); }
+
+	void setPosicio(const string& pos) { m_posicio = pos; }
+
+	void posToInt(const string& posicio, int& f, int& c);
+	string intToPos(int& f, int& c);
+
 	bool operator==(const Posicio& posicio) const;
-	void fromString(const string& posicio);
-	string toString();
-	int getFila() { return m_fila; }
-	int getColumna() { return m_columna; }
-	void inicialitzaPosicio(int fila, int columna) { m_fila = fila, m_columna = columna; }
+
 private:
-	int m_fila;
-	int m_columna;
+	string m_posicio;
+	Fitxa* m_fitxa;
 };
 
 ifstream& operator>>(ifstream& fitxer, Posicio& posicio);

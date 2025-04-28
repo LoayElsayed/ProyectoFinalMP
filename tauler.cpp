@@ -2,7 +2,7 @@
 
 void Tauler::inicialitza(const string& nomFitxer)
 {
-	fstream fitxer(nomFitxer);
+	ifstream fitxer(nomFitxer);
 	int i = 0;
 	int j = 0;
 	if (fitxer.is_open())
@@ -24,18 +24,18 @@ void Tauler::actualitzaMovimentsValids()
 
 }
 
-bool Tauler::mouFitxa(const Posicio& origen, const Posicio& desti)
-{
-
-}
-
 void Tauler::getPosicionsPossibles(const Posicio& origen,
 	int& nPosicions, Posicio posicionsPossibles[])
 {
 
 }
 
+bool Tauler::mouFitxa(const Posicio& origen, const Posicio& desti)
+{
+	return false;
+}
+
 string Tauler::toString() const
 {
-
+	return "";
 }
