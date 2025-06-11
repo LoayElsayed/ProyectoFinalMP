@@ -21,9 +21,12 @@ public:
 	//-------------------Getters-------------------//
 	string getPosInicial(void) const { return m_posInicial; }
 	string getPosFinal(void) const { return m_posFinal; }
-	void getMortes(string mortes[MAX_FITXES_JUGADOR]) const;
+	void getMortes(string mortes[MAX_FITXES_JUGADOR], int& nMortes) const;
 	string getUtlimaMorta(void) const { return m_mortes[m_nMortes - 1]; }
 	int getNMortes(void) const { return m_nMortes; }
+
+	//-------------------Others-------------------//
+	
 
 private:
 	//la posicion de las fitxas muertas

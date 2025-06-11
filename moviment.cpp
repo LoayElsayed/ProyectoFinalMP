@@ -6,10 +6,11 @@ void Moviment::afageixMorta(const string& morta)
 	m_nMortes++;
 }
 
-void Moviment::getMortes(string mortes[MAX_FITXES_JUGADOR]) const
+void Moviment::getMortes(string mortes[MAX_FITXES_JUGADOR], int& nMortes) const
 {
 	for (int i = 0; i < m_nMortes; i++)
 		mortes[i] = m_mortes[i];
+	nMortes = m_nMortes;
 }
 
 void Moviment::reset(void)
@@ -21,3 +22,4 @@ void Moviment::reset(void)
 	m_posInicial = "";
 	m_posFinal = "";
 }
+
