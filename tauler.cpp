@@ -100,10 +100,10 @@ void Tauler::getPosicionsPossibles(const Posicio& origen,
 
 bool Tauler::mouFitxa(const Posicio& origen, const Posicio& desti)
 {
-	bool posible = true;
+	bool posible = false;
 	int i = 0;
-	bool trobat = false;
-	// Comprovar si hi ha fitxa a la posicio d'origen
+	int nMortes = 0;
+	string mortes[MAX_FITXES_JUGADOR];
 	if (!m_tauler[origen.getFila()][origen.getColumna()].teFitxa()) {
 		return false;
 	}
@@ -112,35 +112,105 @@ bool Tauler::mouFitxa(const Posicio& origen, const Posicio& desti)
 	int nMovimentsValids = 0;
 	aux->getMovimentsValids(movimentsValids, nMovimentsValids);
 
-	while (i < MAX_FITXES_JUGADOR && posible)
+
+	while (i < nMovimentsValids && !posible)
 	{
-		if (aux->getMoviment(i).getPosFinal() != desti.getPosicio())
-			posible = false;
-		i++;
+		if (movimentsValids[i].getPosFinal() == desti.getPosicio())
+			posible = true;
+		else
+			i++;
 	}
 	if (posible)
 	{
-		if (aux->getUltimMoviment().getPosInicial() == origen.getPosicio() &&
-			aux->getUltimMoviment().getPosFinal() == desti.getPosicio())
+		int f, c;
+		if (!comprovarMillorMoviment(aux, f, c))
 		{
-			m_tauler[desti.getFila()][desti.getColumna()].setFitxa(aux);
-			m_tauler[origen.getFila()][origen.getColumna()].eliminaFitxa();
+			m_tauler[f][c].eliminaFitxa();
 
-			if ((aux->getColor() == COLOR_BLANC && desti.getFila() == 0) ||
-				(aux->getColor() == COLOR_NEGRE && desti.getFila() == N_FILES - 1))
-			{
-				m_tauler[desti.getFila()][desti.getColumna()].getFitxa()->setTipus(TIPUS_DAMA);
-			}
+			m_tauler[desti.getFila()][desti.getColumna()].setFitxa(aux);
+			string posaux = desti.getPosicio();
+			m_tauler[desti.getFila()][desti.getColumna()].setPosicio(posaux);
+
+			m_tauler[origen.getFila()][origen.getColumna()].eliminaFitxa();
 		}
 		else
 		{
-			m_tauler[origen.getFila()][origen.getColumna()].eliminaFitxa();
+			if (aux->getMillorN() == movimentsValids[i].getNMortes())
+			{
+				m_tauler[desti.getFila()][desti.getColumna()].setFitxa(aux);
+				string posaux = desti.getPosicio();
+				m_tauler[desti.getFila()][desti.getColumna()].setPosicio(posaux);
+
+				movimentsValids[i].getMortes(mortes, nMortes);
+				matarFitxes(mortes, nMortes);
+
+				m_tauler[origen.getFila()][origen.getColumna()].eliminaFitxa();
+
+				if ((aux->getColor() == COLOR_BLANC && desti.getFila() == 7) ||
+					(aux->getColor() == COLOR_NEGRE && desti.getFila() == 0))
+				{
+					m_tauler[desti.getFila()][desti.getColumna()].getFitxa()->setTipus('D');
+				}
+				if ((aux->getColor() == COLOR_NEGRE && desti.getFila() == 0))
+				{
+					m_tauler[desti.getFila()][desti.getColumna()].getFitxa()->setTipus('R');
+				}
+			}
+			else
+			{
+				m_tauler[origen.getFila()][origen.getColumna()].eliminaFitxa();
+				movimentsValids[i].getMortes(mortes, nMortes);
+				matarFitxes(mortes, nMortes);
+			}
 		}
 
 	}
 	actualitzaMovimentsValids();
-
 	return posible;
+}
+bool Tauler::comprovarMillorMoviment(Fitxa* fitxa, int& f, int& c)
+{
+	bool millorFitxa = true;
+	Fitxa* aux = new Fitxa;
+	for (int i = 0; i < N_FILES; i++)
+	{
+		for (int j = 0; j < N_COLUMNES; j++)
+		{
+			if (m_tauler[i][j].getFitxa() != nullptr)
+			{
+				if ((fitxa->getColor() == m_tauler[i][j].getFitxa()->getColor()) && (m_tauler[i][j].getFitxa()->getNMoviments() > 0))
+				{
+					if (fitxa->getUltimMoviment().getNMortes() >= m_tauler[i][j].getFitxa()->getUltimMoviment().getNMortes())
+						millorFitxa = true;
+					else
+					{
+						millorFitxa = false;
+						f = i;
+						c = j;
+					}
+
+				}
+			}
+		}
+	}
+	return millorFitxa;
+}
+void Tauler::posToInt(const string& posicio, int& f, int& c)
+{
+	f = (posicio[1] - '1');
+	c = posicio[0] - 'a';
+}
+
+
+void Tauler::matarFitxes(string mortes[], const int nMortes)
+{
+	int x; //no las inicializo a 0 pq como lo haga a lo mejor me cargo la ficha q esta en 0 0 y como q no
+	int y;
+	for (int i = 0; i < nMortes; i++)
+	{
+		posToInt(mortes[i], x, y);
+		m_tauler[x][y].eliminaFitxa();
+	}
 }
 
 string Tauler::toString() const

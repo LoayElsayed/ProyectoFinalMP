@@ -16,6 +16,9 @@ public:
 	bool mouFitxa(const Posicio& origen, const Posicio& desti);
 	bool isInit(void) const;
 	string toString() const;
+	void matarFitxes(string mortes[], const int nMortes);
+	void posToInt(const string& posicio, int& f, int& c);
+	bool comprovarMillorMoviment(Fitxa* fitxa, int& f, int& c);
 
 private:
 	//moviments normals pel tauler sense captura
