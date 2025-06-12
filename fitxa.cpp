@@ -135,3 +135,12 @@ bool Fitxa::cercaMovPerUPos(const string& pos, Moviment& mov) const
 	}
 	return found;
 }
+
+int Fitxa::getMillorN(void)
+{
+	int aux = 0;
+	for (int i = 0; i < m_nMoviments; i++)
+		if (m_moviments[i].getNMortes() > aux)
+			aux = m_moviments[i].getNMortes();
+	return aux;
+}

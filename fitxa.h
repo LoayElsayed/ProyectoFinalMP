@@ -37,6 +37,7 @@ public:
 	int getNMoviments(void) const { return m_nMoviments; }
 	Moviment getUltimMoviment(void) const { return m_moviments[m_nMoviments - 1]; }
 
+	int getMillorN(void);
 	void getMovimentsValids(Moviment moviments[MAX_FITXES_JUGADOR], int& nMovimentsr);
 
 	//-------------------Others-------------------//
