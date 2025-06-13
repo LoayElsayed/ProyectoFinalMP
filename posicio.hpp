@@ -7,7 +7,7 @@
 class Posicio
 {
 public:
-	Posicio() :m_posicio(""), m_fitxa(nullptr), m_tefitxa(false) {};
+	Posicio() :m_posicio(""), m_fitxa(nullptr) {};
 	Posicio(const string& posicio) : m_posicio(posicio), m_fitxa(nullptr) {};
 
 	//-------------------Getters-------------------//
@@ -17,11 +17,10 @@ public:
 	Fitxa* getFitxa(void) const { return m_fitxa; }
 	string getPosicio(void) const { return m_posicio; }
 
-	bool teFitxa(void) const { return m_tefitxa; }
+	bool teFitxa(void) const { return m_fitxa != nullptr; }
 
 	//-------------------Conversors-------------------//
 	void posToInt(const string& posicio, int& f, int& c);
-	string intToPos(int& f, int& c);
 
 	//-------------------Setters-------------------//
 	void setPosicio(const string& pos) { m_posicio = pos; }
@@ -33,11 +32,12 @@ public:
 	bool operator==(const Posicio& posicio) const;
 
 private:
-	bool m_tefitxa;
 	string m_posicio;
 	Fitxa* m_fitxa;
 };
 
 ifstream& operator>>(ifstream& fitxer, Posicio& posicio);
+ostream& operator<<(ostream& out, const Posicio& pos);
+
 
 #endif 

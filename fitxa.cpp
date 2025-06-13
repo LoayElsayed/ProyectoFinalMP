@@ -33,20 +33,23 @@ void Fitxa::setTipus(const char& tipus)
 
 char Fitxa::getTipusString(void) const
 {
-	if (m_colorFitxa == COLOR_BLANC)
-	{
-		if (m_tipusFitxa == TIPUS_NORMAL)
-			return 'O';
+	if (this != nullptr)
+		if (m_colorFitxa == COLOR_BLANC)
+		{
+			if (m_tipusFitxa == TIPUS_NORMAL)
+				return 'O';
+			else
+				return 'D';
+		}
+		else if (m_colorFitxa == COLOR_NEGRE)
+		{
+			if (m_tipusFitxa == TIPUS_NORMAL)
+				return 'X';
+			else
+				return 'R';
+		}
 		else
-			return 'D';
-	}
-	else if (m_colorFitxa == COLOR_NEGRE)
-	{
-		if (m_tipusFitxa == TIPUS_NORMAL)
-			return 'X';
-		else
-			return 'R';
-	}
+			return '_';
 	else
 		return '_';
 }
@@ -68,18 +71,35 @@ bool Fitxa::isContraria(const char& c) const
 
 void Fitxa::setMoviment(const string& posInicial, const string& posFinal)
 {
-	m_moviments[m_nMoviments].setPosInicial(posInicial);
-	m_moviments[m_nMoviments].setPosFinal(posFinal);
-	m_nMoviments++;
+	if (m_nMoviments < MAX_FITXES_JUGADOR)
+	{
+		m_moviments[m_nMoviments].setPosInicial(posInicial);
+		m_moviments[m_nMoviments].setPosFinal(posFinal);
+		m_nMoviments++;
+	}
+}
+
+void Fitxa::setMoviment(const string& posInicial, const string& posFinal, const string& morta)
+{
+	if (m_nMoviments < MAX_FITXES_JUGADOR)
+	{
+		m_moviments[m_nMoviments].setPosInicial(posInicial);
+		m_moviments[m_nMoviments].setPosFinal(posFinal);
+		m_moviments[m_nMoviments].afageixMorta(morta);
+		m_nMoviments++;
+	}
 }
 
 void Fitxa::setMoviment(const string& posInicial, const string& posFinal, const string mortes[MAX_FITXES_JUGADOR], const int& n)
 {
-	m_moviments[m_nMoviments].setPosInicial(posInicial);
-	m_moviments[m_nMoviments].setPosFinal(posFinal);
-	for(int i = 0; i < n; i++)
-		m_moviments[m_nMoviments].afageixMorta(mortes[i]);
-	m_nMoviments++;
+	if (m_nMoviments < MAX_FITXES_JUGADOR)
+	{
+		m_moviments[m_nMoviments].setPosInicial(posInicial);
+		m_moviments[m_nMoviments].setPosFinal(posFinal);
+		for (int i = 0; i < n; i++)
+			m_moviments[m_nMoviments].afageixMorta(mortes[i]);
+		m_nMoviments++;
+	}
 }
 
 void Fitxa::resetMoviments(void)
@@ -98,4 +118,13 @@ void Fitxa::getMovimentsValids(Moviment moviments[MAX_FITXES_JUGADOR], int& nMov
 		moviments[i] = m_moviments[i];
 	}
 	nMovimentsr = m_nMoviments;
+}
+
+int Fitxa::getMillorN(void)
+{
+	int aux = 0;
+	for (int i = 0; i < m_nMoviments; i++)
+		if (m_moviments[i].getNMortes() > aux)
+			aux = m_moviments[i].getNMortes();
+	return aux;
 }

@@ -13,25 +13,22 @@ ifstream& operator>>(ifstream& fitxer, Posicio& posicio)
 	return fitxer;
 }
 
+ostream& operator<<(ostream& out, const Posicio& pos)
+{
+	out << pos.getPosicio();
+	return out;
+}
+
 void Posicio::posToInt(const string& posicio, int& f, int& c)
 {
 	f = (N_FILES - 1) - (posicio[1] - '1');
 	c = posicio[0] - 'a';
 }
 
-string Posicio::intToPos(int& f, int& c)
-{
-	string pos = "";
-	pos += c + 'a';
-	pos += (N_FILES - 1) - f + '1';
-	return pos;
-}
-
 void Posicio::setFitxa(const char& tipus)
 {
 	m_fitxa = new Fitxa();
 	m_fitxa->setTipus(tipus);
-	m_tefitxa = true;
 }
 
 char Posicio::getTFitxa(void) const
@@ -44,6 +41,5 @@ char Posicio::getTFitxa(void) const
 
 void Posicio::eliminaFitxa()
 {
-	m_tefitxa = false;
-	m_fitxa->setTipus(TIPUS_EMPTY);
+	m_fitxa = nullptr;
 }
