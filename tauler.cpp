@@ -20,6 +20,24 @@ void Tauler::inicialitza(const string& nomFitxer)
 	fitxer.close();
 }
 
+bool Tauler::isInit(void) const
+{
+	bool found = 0;
+	int x = 0;
+	while (x < N_COLUMNES && !found)
+	{
+		int y = 0; 
+		while (y < N_FILES && !found)
+		{
+			if (m_tauler[y][x].teFitxa())
+				found = 1;
+			y++;
+		}
+		x++;
+	}
+	return found;
+}
+
 Posicio Tauler::cercaPosicio(const string& pos) const
 {
 	Posicio aux;
@@ -34,51 +52,32 @@ Posicio Tauler::cercaPosicio(const string& pos) const
 	}	
 }
 
-void Tauler::concatenarMoviments(const Posicio& posicio, Fitxa* fitxa) const
-{
-	int nMoviments = fitxa->getNMoviments();
-	movimentAmpli(posicio, fitxa);
-	while (fitxa->getNMoviments() > nMoviments)
-	{
-		nMoviments = fitxa->getNMoviments();
-		Moviment moviment = fitxa->getUltimMoviment();
-		Posicio pos = cercaPosicio(moviment.getPosFinal());
-		movimentAmpli(pos, fitxa);
-	}
-}
-
 
 void Tauler::actualitzaMovimentsValids()
 {
-	for (int f = 0; f < N_FILES; f++)
-	{
-		for (int c = 0; c < N_COLUMNES; c++)
+	if(this->isInit())
+		for (int f = 0; f < N_FILES; f++)
 		{
-			if (m_tauler[f][c].getTFitxa() != '-')
+			for (int c = 0; c < N_COLUMNES; c++)
 			{
-				Fitxa* fitxa = m_tauler[f][c].getFitxa();
-				if (fitxa != nullptr)
-					if (fitxa->getTipus() == TIPUS_NORMAL)
-					{
-						movimentEstret(m_tauler[f][c]);
+				if (m_tauler[f][c].getTFitxa() != '-')
+				{
+					Fitxa* fitxa = m_tauler[f][c].getFitxa();
+					if (fitxa != nullptr)
+						if (fitxa->getTipus() == TIPUS_NORMAL)
+						{
+							movimentEstret(m_tauler[f][c]);
 
-						//ahora miramos el movimiento amplio y controlamos si hay o no captura
-						concatenarMoviments(m_tauler[f][c], fitxa);
-					}
-					else {
-						//logica de la dama
-						/*
-						Hare una funcion que recorra el tablero diagonalmente hasta encontrar
-						una casilla con fitxa ya sea amiga o enemiga, luego buscara un
-						movimiento ancho a partir de esa posicion, evidentemente debe buscar en las 
-						4 direcciones diagonales
-						*/
-						movimentDama(m_tauler[f][c], fitxa);
-						concatenarMoviments(m_tauler[f][c], fitxa);
-					}
+							//ahora miramos el movimiento amplio y controlamos si hay o no captura
+							concatenarMoviments(m_tauler[f][c], fitxa);
+						}
+						else {
+							//logica de la dama
+							movimentDama(m_tauler[f][c], fitxa);
+						}
+				}
 			}
 		}
-	}
 }
 
 void Tauler::getPosicionsPossibles(const Posicio& origen,
@@ -101,10 +100,10 @@ void Tauler::getPosicionsPossibles(const Posicio& origen,
 
 bool Tauler::mouFitxa(const Posicio& origen, const Posicio& desti)
 {
-	bool posible = true;
+	bool posible = false;
 	int i = 0;
-	bool trobat = false;
-	// Comprovar si hi ha fitxa a la posicio d'origen
+	int nMortes = 0;
+	string mortes[MAX_FITXES_JUGADOR];
 	if (!m_tauler[origen.getFila()][origen.getColumna()].teFitxa()) {
 		return false;
 	}
@@ -113,35 +112,105 @@ bool Tauler::mouFitxa(const Posicio& origen, const Posicio& desti)
 	int nMovimentsValids = 0;
 	aux->getMovimentsValids(movimentsValids, nMovimentsValids);
 
-	while (i < MAX_FITXES_JUGADOR && posible)
+
+	while (i < nMovimentsValids && !posible)
 	{
-		if (aux->getMoviment(i).getPosFinal() != desti.getPosicio())
-			posible = false;
-		i++;
+		if (movimentsValids[i].getPosFinal() == desti.getPosicio())
+			posible = true;
+		else
+			i++;
 	}
 	if (posible)
 	{
-		if (aux->getUltimMoviment().getPosInicial() == origen.getPosicio() &&
-			aux->getUltimMoviment().getPosFinal() == desti.getPosicio())
+		int f, c;
+		if (!comprovarMillorMoviment(aux, f, c))
 		{
-			m_tauler[desti.getFila()][desti.getColumna()].setFitxa(aux);
-			m_tauler[origen.getFila()][origen.getColumna()].eliminaFitxa();
+			m_tauler[f][c].eliminaFitxa();
 
-			if ((aux->getColor() == COLOR_BLANC && desti.getFila() == 0) ||
-				(aux->getColor() == COLOR_NEGRE && desti.getFila() == N_FILES - 1))
-			{
-				m_tauler[desti.getFila()][desti.getColumna()].getFitxa()->setTipus(TIPUS_DAMA);
-			}
+			m_tauler[desti.getFila()][desti.getColumna()].setFitxa(aux);
+			string posaux = desti.getPosicio();
+			m_tauler[desti.getFila()][desti.getColumna()].setPosicio(posaux);
+
+			m_tauler[origen.getFila()][origen.getColumna()].eliminaFitxa();
 		}
 		else
 		{
-			m_tauler[origen.getFila()][origen.getColumna()].eliminaFitxa();
+			if (aux->getMillorN() == movimentsValids[i].getNMortes())
+			{
+				m_tauler[desti.getFila()][desti.getColumna()].setFitxa(aux);
+				string posaux = desti.getPosicio();
+				m_tauler[desti.getFila()][desti.getColumna()].setPosicio(posaux);
+
+				movimentsValids[i].getMortes(mortes, nMortes);
+				matarFitxes(mortes, nMortes);
+
+				m_tauler[origen.getFila()][origen.getColumna()].eliminaFitxa();
+
+				if ((aux->getColor() == COLOR_BLANC && desti.getFila() == 7) ||
+					(aux->getColor() == COLOR_NEGRE && desti.getFila() == 0))
+				{
+					m_tauler[desti.getFila()][desti.getColumna()].getFitxa()->setTipus('D');
+				}
+				if ((aux->getColor() == COLOR_NEGRE && desti.getFila() == 0))
+				{
+					m_tauler[desti.getFila()][desti.getColumna()].getFitxa()->setTipus('R');
+				}
+			}
+			else
+			{
+				m_tauler[origen.getFila()][origen.getColumna()].eliminaFitxa();
+				movimentsValids[i].getMortes(mortes, nMortes);
+				matarFitxes(mortes, nMortes);
+			}
 		}
 
 	}
 	actualitzaMovimentsValids();
-
 	return posible;
+}
+bool Tauler::comprovarMillorMoviment(Fitxa* fitxa, int& f, int& c)
+{
+	bool millorFitxa = true;
+	Fitxa* aux = new Fitxa;
+	for (int i = 0; i < N_FILES; i++)
+	{
+		for (int j = 0; j < N_COLUMNES; j++)
+		{
+			if (m_tauler[i][j].getFitxa() != nullptr)
+			{
+				if ((fitxa->getColor() == m_tauler[i][j].getFitxa()->getColor()) && (m_tauler[i][j].getFitxa()->getNMoviments() > 0))
+				{
+					if (fitxa->getUltimMoviment().getNMortes() >= m_tauler[i][j].getFitxa()->getUltimMoviment().getNMortes())
+						millorFitxa = true;
+					else
+					{
+						millorFitxa = false;
+						f = i;
+						c = j;
+					}
+
+				}
+			}
+		}
+	}
+	return millorFitxa;
+}
+void Tauler::posToInt(const string& posicio, int& f, int& c)
+{
+	f = (posicio[1] - '1');
+	c = posicio[0] - 'a';
+}
+
+
+void Tauler::matarFitxes(string mortes[], const int nMortes)
+{
+	int x; //no las inicializo a 0 pq como lo haga a lo mejor me cargo la ficha q esta en 0 0 y como q no
+	int y;
+	for (int i = 0; i < nMortes; i++)
+	{
+		posToInt(mortes[i], x, y);
+		m_tauler[x][y].eliminaFitxa();
+	}
 }
 
 string Tauler::toString() const
@@ -186,12 +255,67 @@ bool yLimit(int y)
 	return (y >= 0 && y < N_FILES);
 }
 
-void Tauler::movimentEstret(const Posicio& pos) const
+bool isInStrArr(const string arr[MAX_FITXES_JUGADOR], const string& str)
+{
+	int i = 0;
+	bool found = 0;
+	while (i < MAX_FITXES_JUGADOR && !found)
+	{
+		if (arr[i] == str)
+			found = 1;
+		i++;
+	}
+	return found;
+}
+
+void strArrCpy(string origen[MAX_FITXES_JUGADOR], string destino[MAX_FITXES_JUGADOR])
+{
+	for (int i = 0; i < MAX_FITXES_JUGADOR; i++)
+		destino[i] = origen[i];
+}
+
+void Tauler::concatenarMoviments(const Posicio& posicio, Fitxa* fitxa) const
+{
+	if (fitxa == nullptr)
+		return;
+
+	string mortes[MAX_FITXES_JUGADOR];
+	int nMortes = 0;
+
+	int nMov = fitxa->getNMoviments();
+
+	if (fitxa->getTipus() == TIPUS_DAMA)
+	{
+		Moviment ultMov = fitxa->getUltimMoviment();
+		ultMov.getMortes(mortes, nMortes);
+		movimentAmpli(ultMov.getPosFinal(), fitxa, mortes, nMortes, posicio);
+	}
+	else
+		movimentAmpli(posicio, fitxa, mortes, nMortes, posicio);
+
+	while (nMov < fitxa->getNMoviments())
+	{
+		int nAntiga = nMov;
+		nMov = fitxa->getNMoviments();
+
+		for (int i = nAntiga; i < nMov; i++)
+		{
+			Moviment mov = fitxa->getMoviment(i);
+			mov.getMortes(mortes, nMortes);
+			Posicio inicial = mov.getPosInicial();
+			Posicio posVirtual = mov.getPosFinal();
+			movimentAmpli(posVirtual, fitxa, mortes, nMortes, inicial);
+		}
+	}
+}
+
+bool Tauler::movimentEstret(const Posicio& pos) const
 {
 	int x = pos.getColumna();
 	int y = pos.getFila();
 
 	Fitxa* fitxa = pos.getFitxa();
+	bool possible = false;
 
 	int ex[2] = { -1, 1 };
 	int ey[2] = { 1, 1 };
@@ -211,21 +335,19 @@ void Tauler::movimentEstret(const Posicio& pos) const
 			if (!m_tauler[mey][mex].teFitxa())
 			{
 				fitxa->setMoviment(pos.getPosicio(), intToPos(mey, mex));
+				possible = true;
 			}
 		}
 	}
+	return possible;
 }
 
-void Tauler::movimentAmpli(const Posicio& pos, Fitxa* fitxa) const
+bool Tauler::movimentAmpli(const Posicio& pos, Fitxa* fitxa, string mortes[MAX_FITXES_JUGADOR], int& nMortes, const Posicio& inicial) const
 {
 	int x = pos.getColumna();
 	int y = pos.getFila();
 
-	string ultimaMorta = "";
-
-	if (fitxa->getNMoviments() > 0)
-		if(fitxa->getUltimMoviment().getNMortes() > 0)
-			ultimaMorta = fitxa->getUltimMoviment().getUtlimaMorta();
+	bool possible = false;
 
 	int ax[] = { -2, 2, -2, 2 }; // ampli x
 	int ay[] = { 2, 2, -2, -2 }; // ampli y
@@ -245,8 +367,6 @@ void Tauler::movimentAmpli(const Posicio& pos, Fitxa* fitxa) const
 	}
 	
 	//aqui guardem les fitxes mortes acomulativament
-	string mortes[MAX_FITXES_JUGADOR];
-	int nMortes = 0;
 
 	for (int i = 0; i < N; ++i)
 	{
@@ -258,22 +378,25 @@ void Tauler::movimentAmpli(const Posicio& pos, Fitxa* fitxa) const
 		if (xLimit(max) && yLimit(may))
 		{
 			//les posicions x y estan invertides per la forma en la que está estructurada la taula
-			
-			//comprovamos que la fitxa que intentaremos matar no haya sido la ultima muerta
-			if(ultimaMorta != m_tauler[mey][mex].getPosicio())
-				//miramos si la fitxa en la direccion que miramos sea contraria
-				if (fitxa->isContraria(m_tauler[mey][mex].getTFitxa()))
-				{
-					//comprovamos que la posicion siguiente esta vacia
-					if (!m_tauler[may][max].teFitxa())
+			Posicio fitxaTrobada = m_tauler[mey][mex];
+			Posicio seguentPos = m_tauler[may][max];
+
+			if (fitxa->isContraria(fitxaTrobada.getTFitxa()))
+				if (!seguentPos.teFitxa())
+					if (!isInStrArr(mortes, fitxaTrobada.getPosicio()))
 					{
-						mortes[nMortes] = m_tauler[mey][mex].getPosicio();
-						nMortes++;
-						fitxa->setMoviment(pos.getPosicio(), intToPos(may, max), mortes, nMortes);
+						seguentPos.setPosicio(intToPos(may, max));
+
+						string arrAux[MAX_FITXES_JUGADOR];
+						strArrCpy(mortes, arrAux);
+						arrAux[nMortes] = fitxaTrobada.getPosicio();
+
+						fitxa->setMoviment(inicial.getPosicio(), seguentPos.getPosicio(), arrAux, (nMortes + 1));
+						possible = true;
 					}
-				}
 		}
 	}
+	return possible;
 }
 
 void Tauler::movimentDama(const Posicio& pos, Fitxa* fitxa) const
@@ -296,13 +419,34 @@ void Tauler::movimentDama(const Posicio& pos, Fitxa* fitxa) const
 			my = y + py[j] * i; //moviment y
 
 			if (!m_tauler[my][mx].teFitxa())
-			{
-				Posicio aux;
-				aux.setPosicio(intToPos(my, mx));
 				fitxa->setMoviment(pos.getPosicio(), intToPos(my, mx));
-			}
 			else
+			{
+				int max = x + px[j] * (i + 1); //moviment ampli x
+				int may = y + py[j] * (i + 1); //moviment ampli y
+
+				if (xLimit(max) && yLimit(may))
+				{
+					Posicio fitxaTrobada = m_tauler[my][mx];
+					Posicio seguentPos = m_tauler[may][max];
+
+					if (fitxa->isContraria(fitxaTrobada.getTFitxa()))
+						if (!seguentPos.teFitxa())
+						{
+							seguentPos.setPosicio(intToPos(may, max));
+							//forzamos el primer movimiento en esa direccion
+							fitxa->setMoviment(pos.getPosicio(), seguentPos.getPosicio(), fitxaTrobada.getPosicio());
+							//esta funcion detecta si es una dama
+							//y adquiere como posicion inicial la pos 
+							//inicial del ultimo movimiento que en este
+							//caso como solo hay uno es el primero
+							//y ya concatena teniendo en cuenta la primera muerte
+							concatenarMoviments(pos, fitxa);
+						}
+				}
 				found = true; //s'ha trobat una fitxa i es deixa de buscar en la direcció
+			}
+				
 			i++;
 		}
 		i = 1;

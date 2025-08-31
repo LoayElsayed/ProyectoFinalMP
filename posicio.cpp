@@ -41,6 +41,5 @@ char Posicio::getTFitxa(void) const
 
 void Posicio::eliminaFitxa()
 {
-	m_fitxa->setTipus(TIPUS_EMPTY);
 	m_fitxa = nullptr;
 }

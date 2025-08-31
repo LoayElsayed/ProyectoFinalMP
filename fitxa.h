@@ -24,6 +24,7 @@ public:
 	void setTipus(const char& tipus);
 	void setMoviment(const string& posInicial, const string& posFinal);
 	void setMoviment(const string& posInicial, const string& posFinal, const string mortes[MAX_FITXES_JUGADOR], const int& n);
+	void setMoviment(const string& posInicial, const string& posFinal, const string& morta);
 	void resetMoviments(void);
 
 	//-------------------Getters-------------------//
@@ -36,7 +37,11 @@ public:
 	int getNMoviments(void) const { return m_nMoviments; }
 	Moviment getUltimMoviment(void) const { return m_moviments[m_nMoviments - 1]; }
 
+	int getMillorN(void);
 	void getMovimentsValids(Moviment moviments[MAX_FITXES_JUGADOR], int& nMovimentsr);
+
+	//-------------------Others-------------------//
+	bool cercaMovPerUPos(const string& pos, Moviment& mov) const;
 
 	bool isContraria(const char& c) const;
 

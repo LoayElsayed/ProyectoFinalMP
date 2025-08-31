@@ -14,13 +14,17 @@ public:
 	void getPosicionsPossibles(const Posicio& origen,
 		int& nPosicions, Posicio posicionsPossibles[]);
 	bool mouFitxa(const Posicio& origen, const Posicio& desti);
+	bool isInit(void) const;
 	string toString() const;
+	void matarFitxes(string mortes[], const int nMortes);
+	void posToInt(const string& posicio, int& f, int& c);
+	bool comprovarMillorMoviment(Fitxa* fitxa, int& f, int& c);
 
 private:
 	//moviments normals pel tauler sense captura
-	void movimentEstret(const Posicio& pos) const;
+	bool movimentEstret(const Posicio& pos) const;
 	//moviments normals pel tauler amb captura
-	void movimentAmpli(const Posicio& pos, Fitxa* fitxa) const;
+	bool movimentAmpli(const Posicio& pos, Fitxa* fitxa, string mortes[MAX_FITXES_JUGADOR], int& nMortes, const Posicio& final) const;
 	//moviments de dama en diagonal pel tauler
 	void movimentDama(const Posicio& pos, Fitxa* fitxa) const;
 
